@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GimnasioApi", "GimnasioApi.csproj", "{07013F28-8E48-D3BC-C92B-068EB6BD53EC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{07013F28-8E48-D3BC-C92B-068EB6BD53EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07013F28-8E48-D3BC-C92B-068EB6BD53EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07013F28-8E48-D3BC-C92B-068EB6BD53EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{07013F28-8E48-D3BC-C92B-068EB6BD53EC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2C00BD93-9BF1-4DA9-B8AA-843B9038B46F}
+	EndGlobalSection
+EndGlobal
