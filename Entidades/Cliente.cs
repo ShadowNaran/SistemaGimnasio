@@ -8,6 +8,6 @@ public class Cliente {
 
     public ICollection<ClientePlan> ClientesPlanes { get; set; } = new List<ClientePlan>();
     /*
-      Se separo teléfono en otra tabla porque un cliente puede tener mas de uno
+      Se separo telefono en otra tabla porque un cliente puede tener mas de uno
      */
 }
