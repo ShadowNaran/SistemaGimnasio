@@ -9,8 +9,8 @@ public class ClientePlan
 
     public DateTime FechaInicio { get; set; }
     public DateTime FechaFin { get; set; }
-    public string Estado { get; set; } = null!; 
+    public required string Estado { get; set; } 
 
-    public Cliente Cliente { get; set; } = null!;
-    public Plan Plan { get; set; } = null!;
+    public required Cliente Cliente { get; set; } 
+    public required Plan Plan { get; set; } 
 }

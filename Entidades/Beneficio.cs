@@ -3,7 +3,7 @@ public class Beneficio
 {
     public int IdBeneficio { get; set; }
     public int IdPlan { get; set; }
-    public string Descripcion { get; set; } = null!;
+    public required string Descripcion { get; set; } 
 
-    public Plan Plan { get; set; } = null!;
+    public required Plan Plan { get; set; } 
 }

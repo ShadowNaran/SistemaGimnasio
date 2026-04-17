@@ -3,11 +3,11 @@ namespace GimnasioApi.Entidades;
 public class Telefono
 {
     public int IdTelefono { get; set; }
-    public string Numero { get; set; } = null!;
+    public required string Numero { get; set; }
 
     public int IdCliente { get; set; }
     public int IdTipoTelefono { get; set; } 
 
-    public Cliente Cliente { get; set; } = null!;
-    public TipoTelefono TipoTelefono { get; set; } = null!;
+    public required Cliente Cliente { get; set; }
+    public required TipoTelefono TipoTelefono { get; set; }
 }
