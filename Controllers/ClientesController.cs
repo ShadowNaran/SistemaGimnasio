@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using GimnasioApi.Data;
 using GimnasioApi.Entidades;
+using GimnasioApi.DTOs; 
 
 namespace GimnasioApi.Controllers
 {
@@ -11,30 +12,47 @@ namespace GimnasioApi.Controllers
     public class ClientesController : ControllerBase
     {
         private readonly AppDbContext _context;
+
         public ClientesController(AppDbContext context)
         {
             _context = context;
         }
-        //lista de clientes
-       [HttpGet]
-        public async Task<ActionResult<ICollection<Cliente>>> GetClientes()
+
+        // 1. LISTA DE CLIENTES USANDO DTO
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<ClienteDTO>>> GetClientes()
         {
-            var clientes = await _context.Clientes.ToListAsync();
+            var clientes = await _context.Clientes
+                .Include(c => c.Telefonos)
+                .Select(c => new ClienteDTO
+                {
+                    IdCliente = c.IdCliente,
+                    Nombre = c.Nombre,
+                    CI = c.CI,
+                    // Convertimos la coleccion de objetos Telefono a una lista de strings
+                    NumerosTelefonicos = c.Telefonos.Select(t => t.Numero).ToList()
+                })
+                .ToListAsync();
+
             return Ok(clientes);
         }
-        //busqueda por id
+
+        // 2. BUSQUEDA POR ID
         [HttpGet("{id}")]
         public async Task<ActionResult<Cliente>> GetCliente(int id)
         {
-            var cliente = await _context.Clientes.FindAsync(id);
+            var cliente = await _context.Clientes
+                .Include(c => c.Telefonos)
+                .FirstOrDefaultAsync(c => c.IdCliente == id);
 
             if (cliente == null)
                 return NotFound();
 
             return Ok(cliente);
         }
-          //agregar un nuevo cliente
-       [HttpPost]
+
+        // 3. AGREGAR NUEVO CLIENTE
+        [HttpPost]
         public async Task<ActionResult<Cliente>> CreateCliente([FromBody] Cliente cliente)
         {
             _context.Clientes.Add(cliente);
@@ -42,23 +60,23 @@ namespace GimnasioApi.Controllers
 
             return CreatedAtAction(nameof(GetCliente), new { id = cliente.IdCliente }, cliente);
         }
-        // actualizar un cliente
+
+        // 4. ACTUALIZAR CLIENTE
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCliente(int id, [FromBody] Cliente cliente)
         {
-           
             var existing = await _context.Clientes.FindAsync(id);
             if (existing == null)
-                return NotFound("el id no se encuentra");
+                return NotFound("El ID no se encuentra");
 
-            
             existing.Nombre = cliente.Nombre;
             existing.CI = cliente.CI;
 
             await _context.SaveChangesAsync();
             return NoContent();
         }
-        // eliminar cliente
+
+        // 5. ELIMINAR CLIENTE
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCliente(int id)
         {
@@ -70,8 +88,5 @@ namespace GimnasioApi.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
-
-
-
     }
 }
