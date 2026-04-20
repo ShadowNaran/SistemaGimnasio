@@ -53,12 +53,11 @@ namespace GimnasioApi.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdatePlan(int id, [FromBody] Plan plan)
         {
-            if (id != plan.IdPlan)
-                return BadRequest("el id no coincide");
+            
 
             var existing = await _contexto.Planes.FindAsync(id);
             if (existing == null)
-                return NotFound();
+                return NotFound("el id no coincide");
 
             // Actualizar propiedades
             existing.Nombre = plan.Nombre;

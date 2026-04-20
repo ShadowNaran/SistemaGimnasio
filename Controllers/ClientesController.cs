@@ -24,7 +24,7 @@ namespace GimnasioApi.Controllers
         }
         //busqueda por id
         [HttpGet("{id}")]
-        public async Task<ActionResult<Cliente>> GetCliente(Guid id)
+        public async Task<ActionResult<Cliente>> GetCliente(int id)
         {
             var cliente = await _context.Clientes.FindAsync(id);
 
@@ -46,12 +46,10 @@ namespace GimnasioApi.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCliente(int id, [FromBody] Cliente cliente)
         {
-            if (id != cliente.IdCliente)
-                return BadRequest("el id no coincide");
-
+           
             var existing = await _context.Clientes.FindAsync(id);
             if (existing == null)
-                return NotFound();
+                return NotFound("el id no se encuentra");
 
             
             existing.Nombre = cliente.Nombre;
