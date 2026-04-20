@@ -18,7 +18,7 @@ namespace GimnasioApi.Controllers
             _context = context;
         }
 
-        // 1. LISTA DE CLIENTES USANDO DTO
+        //  LISTA DE CLIENTES USANDO DTO
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ClienteDTO>>> GetClientes()
         {
@@ -29,7 +29,7 @@ namespace GimnasioApi.Controllers
                     IdCliente = c.IdCliente,
                     Nombre = c.Nombre,
                     CI = c.CI,
-                    // Convertimos la coleccion de objetos Telefono a una lista de strings
+                    
                     NumerosTelefonicos = c.Telefonos.Select(t => t.Numero).ToList()
                 })
                 .ToListAsync();
@@ -37,7 +37,7 @@ namespace GimnasioApi.Controllers
             return Ok(clientes);
         }
 
-        // 2. BUSQUEDA POR ID
+        //  BUSQUEDA POR ID
         [HttpGet("{id}")]
         public async Task<ActionResult<Cliente>> GetCliente(int id)
         {
@@ -51,7 +51,7 @@ namespace GimnasioApi.Controllers
             return Ok(cliente);
         }
 
-        // 3. AGREGAR NUEVO CLIENTE
+        //  AGREGAR NUEVO CLIENTE
         [HttpPost]
         public async Task<ActionResult<Cliente>> CreateCliente([FromBody] Cliente cliente)
         {
@@ -61,7 +61,7 @@ namespace GimnasioApi.Controllers
             return CreatedAtAction(nameof(GetCliente), new { id = cliente.IdCliente }, cliente);
         }
 
-        // 4. ACTUALIZAR CLIENTE
+        // ACTUALIZAR CLIENTE
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCliente(int id, [FromBody] Cliente cliente)
         {
@@ -76,7 +76,7 @@ namespace GimnasioApi.Controllers
             return NoContent();
         }
 
-        // 5. ELIMINAR CLIENTE
+        //  ELIMINAR CLIENTE
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCliente(int id)
         {
