@@ -18,7 +18,7 @@ namespace GimnasioApi.Controllers
             _context = context;
         }
 
-        //  LISTA DE CLIENTES USANDO DTO
+        //  LISTA DE CLIENTES 
        [HttpGet]
            public async Task<ActionResult<IEnumerable<Cliente>>> GetClientes()
           {
@@ -29,9 +29,7 @@ namespace GimnasioApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Cliente>> GetCliente(int id)
         {
-            var cliente = await _context.Clientes
-                .Include(c => c.Telefonos)
-                .FirstOrDefaultAsync(c => c.IdCliente == id);
+            var cliente = await _context.Clientes.FindAsync(id);
 
             if (cliente == null)
                 return NotFound();
