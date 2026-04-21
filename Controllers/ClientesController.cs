@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using GimnasioApi.Data;
 using GimnasioApi.Entidades;
-using GimnasioApi.DTOs; 
+using GimnasioApi.DTO.Cliente.AgregarCliente;
 
 namespace GimnasioApi.Controllers
 {
@@ -19,23 +19,11 @@ namespace GimnasioApi.Controllers
         }
 
         //  LISTA DE CLIENTES USANDO DTO
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<ClienteDTO>>> GetClientes()
-        {
-            var clientes = await _context.Clientes
-                .Include(c => c.Telefonos)
-                .Select(c => new ClienteDTO
-                {
-                    IdCliente = c.IdCliente,
-                    Nombre = c.Nombre,
-                    CI = c.CI,
-                    
-                    NumerosTelefonicos = c.Telefonos.Select(t => t.Numero).ToList()
-                })
-                .ToListAsync();
-
-            return Ok(clientes);
-        }
+       [HttpGet]
+           public async Task<ActionResult<IEnumerable<Cliente>>> GetClientes()
+          {
+             return await _context.Clientes.ToListAsync(); 
+          } 
 
         //  BUSQUEDA POR ID
         [HttpGet("{id}")]
@@ -50,15 +38,27 @@ namespace GimnasioApi.Controllers
 
             return Ok(cliente);
         }
-
-        //  AGREGAR NUEVO CLIENTE
-        [HttpPost]
-        public async Task<ActionResult<Cliente>> CreateCliente([FromBody] Cliente cliente)
+          //agregar un nuevo cliente
+       [HttpPost]
+        public async Task<ActionResult<AgregarClienteOutput>> CreateCliente([FromBody] AgregarClienteOutput cliente)
         {
-            _context.Clientes.Add(cliente);
-            await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetCliente), new { id = cliente.IdCliente }, cliente);
+         var entrada = new Cliente
+         {
+            Nombre = cliente.Nombre,
+            CI = cliente.CI
+        };
+
+        _context.Clientes.Add(entrada);
+        await _context.SaveChangesAsync();
+
+        var salida = new AgregarClienteOutput
+        {
+            Nombre = entrada.Nombre,
+            CI = entrada.CI
+        };
+
+           return CreatedAtAction(nameof(GetClientes), new { id = entrada.IdCliente }, salida);
         }
 
         // ACTUALIZAR CLIENTE
