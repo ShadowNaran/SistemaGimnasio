@@ -27,7 +27,7 @@ namespace GimnasioApi.Controllers
 
         //  BUSQUEDA POR ID
         [HttpGet("{id}")]
-        public async Task<ActionResult<Cliente>> GetCliente(int id)
+        public async Task<ActionResult<Cliente>> GetCliente( int id)
         {
             var cliente = await _context.Clientes.FindAsync(id);
 
