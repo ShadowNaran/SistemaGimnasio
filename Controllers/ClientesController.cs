@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using GimnasioApi.Data;
 using GimnasioApi.Entidades;
 using GimnasioApi.DTO.Cliente.AgregarCliente;
+using GimnasioApi.DTO.Plan.AsignarPlan;
 
 namespace GimnasioApi.Controllers
 {
@@ -58,6 +59,39 @@ namespace GimnasioApi.Controllers
 
            return CreatedAtAction(nameof(GetClientes), new { id = entrada.IdCliente }, salida);
         }
+
+       [HttpPost("asignar-planes")]
+       public async Task<IActionResult> AsignarPlanes([FromBody] AsignarPlanesClienteInput entrada)
+{
+    //  validar si el cliente existe
+    var cliente = await _context.Clientes.FindAsync(entrada.IdCliente);
+
+    if (cliente == null)
+    {
+        
+        return NotFound($"No se encontro el cliente con ID {entrada.IdCliente}");
+    }
+
+    //recorrer la lista de planes del DTO
+    foreach (var item in entrada.Planes)
+    {
+        var clientePlan = new ClientePlan
+        {
+            IdCliente = entrada.IdCliente,
+            IdPlan = item.IdPlan,
+            FechaInicio = DateTime.Now, 
+            FechaFin = DateTime.Now.AddMonths(1),
+            Estado = "Activo"
+        };
+
+        _context.ClientesPlanes.Add(clientePlan);
+    }
+
+    await _context.SaveChangesAsync();
+
+    return Ok(new { mensaje = "Planes asignados correctamente" });
+}
+
 
         // ACTUALIZAR CLIENTE
         [HttpPut("{id}")]
