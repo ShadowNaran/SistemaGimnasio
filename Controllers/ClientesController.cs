@@ -5,6 +5,9 @@ using GimnasioApi.Data;
 using GimnasioApi.Entidades;
 using GimnasioApi.DTO.Cliente.AgregarCliente;
 using GimnasioApi.DTO.Plan.AsignarPlan;
+using GimnasioApi.DTO.Cliente.ListarClientes;
+using GimnasioApi.DTO.Cliente.ObtenerCliente;
+using GimnasioApi.DTO.Cliente.ActualizarCliente;
 
 namespace GimnasioApi.Controllers
 {
@@ -18,32 +21,49 @@ namespace GimnasioApi.Controllers
         {
             _context = context;
         }
+       
 
         //  LISTA DE CLIENTES 
        [HttpGet]
-           public async Task<ActionResult<IEnumerable<Cliente>>> GetClientes()
-          {
-             return await _context.Clientes.ToListAsync(); 
-          } 
+       public async Task<ActionResult<IEnumerable<ListarClientesOutput>>> GetClientes()
+  {
+    var clientes = await _context.Clientes
+        .Select(c => new ListarClientesOutput
+        {
+            IdCliente = c.IdCliente,
+            Nombre = c.Nombre,
+            CI = c.CI
+        })
+        .ToListAsync();
+
+    return Ok(clientes);
+  }
 
         //  BUSQUEDA POR ID
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Cliente>> GetCliente( int id)
-        {
-            var cliente = await _context.Clientes.FindAsync(id);
+       [HttpGet("{id}")]
+public async Task<ActionResult<ObtenerClienteOutput>> GetCliente(int id)
+{
+    var cliente = await _context.Clientes.FindAsync(id);
 
-            if (cliente == null)
-                return NotFound();
+    if (cliente == null)
+        return NotFound();
 
-            return Ok(cliente);
-        }
+    var salida = new ObtenerClienteOutput
+    {
+        IdCliente = cliente.IdCliente,
+        Nombre = cliente.Nombre,
+        CI = cliente.CI
+    };
+
+    return Ok(salida);
+}
+
           //agregar un nuevo cliente
-       [HttpPost]
-        public async Task<ActionResult<AgregarClienteOutput>> CreateCliente([FromBody] AgregarClienteOutput cliente)
+     [HttpPost]
+    public async Task<ActionResult<AgregarClienteOutput>> CreateCliente([FromBody] AgregarClienteInput cliente)
+    {
+        var entrada = new Cliente
         {
-
-         var entrada = new Cliente
-         {
             Nombre = cliente.Nombre,
             CI = cliente.CI
         };
@@ -53,16 +73,17 @@ namespace GimnasioApi.Controllers
 
         var salida = new AgregarClienteOutput
         {
+            IdCliente = entrada.IdCliente,
             Nombre = entrada.Nombre,
             CI = entrada.CI
         };
 
-           return CreatedAtAction(nameof(GetClientes), new { id = entrada.IdCliente }, salida);
-        }
+        return CreatedAtAction(nameof(GetCliente), new { id = entrada.IdCliente }, salida);
+    }
 
        [HttpPost("asignar-planes")]
        public async Task<IActionResult> AsignarPlanes([FromBody] AsignarPlanesClienteInput entrada)
-{
+    {
     //  validar si el cliente existe
     var cliente = await _context.Clientes.FindAsync(entrada.IdCliente);
 
@@ -72,7 +93,7 @@ namespace GimnasioApi.Controllers
         return NotFound($"No se encontro el cliente con ID {entrada.IdCliente}");
     }
 
-    //recorrer la lista de planes del DTO
+    
     foreach (var item in entrada.Planes)
     {
         var clientePlan = new ClientePlan
@@ -94,31 +115,51 @@ namespace GimnasioApi.Controllers
 
 
         // ACTUALIZAR CLIENTE
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateCliente(int id, [FromBody] Cliente cliente)
+       [HttpPut("{id}")]
+public async Task<ActionResult<ActualizarClienteOutput>> UpdateCliente(int id, [FromBody] ActualizarClienteInput cliente)
+{
+    var existing = await _context.Clientes.FindAsync(id);
+
+    if (existing == null)
+        return NotFound("El cliente no existe");
+
+    existing.Nombre = cliente.Nombre;
+    existing.CI = cliente.CI;
+
+    await _context.SaveChangesAsync();
+
+    var salida = new ActualizarClienteOutput
+    {
+        IdCliente = existing.IdCliente,
+        Nombre = existing.Nombre,
+        CI = existing.CI
+    };
+
+    return Ok(salida);
+}
+
+       [HttpGet("Estado")]
+public async Task<ActionResult<List<ListarClientesOutput>>> Get([FromQuery] bool? activo)
+{
+    // Creamos la consulta base
+    var query = _context.Clientes.AsQueryable();
+
+    // Si el usuario envía el parámetro ?activo=true o ?activo=false, filtramos
+    if (activo.HasValue)
+    {
+        query = query.Where(x => x.Activo == activo.Value);
+    }
+
+    var clientes = await query
+        .Select(c => new ListarClientesOutput
         {
-            var existing = await _context.Clientes.FindAsync(id);
-            if (existing == null)
-                return NotFound("El ID no se encuentra");
+            IdCliente = c.IdCliente,
+            Nombre = c.Nombre,
+            CI = c.CI,
+            Activo = c.Activo   
+        }).ToListAsync();
 
-            existing.Nombre = cliente.Nombre;
-            existing.CI = cliente.CI;
-
-            await _context.SaveChangesAsync();
-            return NoContent();
-        }
-
-        //  ELIMINAR CLIENTE
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteCliente(int id)
-        {
-            var cliente = await _context.Clientes.FindAsync(id);
-            if (cliente == null)
-                return NotFound();
-
-            _context.Clientes.Remove(cliente);
-            await _context.SaveChangesAsync();
-            return NoContent();
-        }
+    return clientes;
+}
     }
 }

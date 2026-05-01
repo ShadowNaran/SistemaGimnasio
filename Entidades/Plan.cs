@@ -7,6 +7,8 @@ public class Plan
     public decimal Precio { get; set; }
     public required string Descripcion { get; set; }
 
+    public bool Activo { get; set; } = true;
+
     public ICollection<Beneficio> Beneficios { get; set; } = new List<Beneficio>();
     public ICollection<ClientePlan> ClientesPlanes { get; set; } = new List<ClientePlan>();
     /*
