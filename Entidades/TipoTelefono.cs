@@ -6,12 +6,5 @@ public class TipoTelefono
     public required string Nombre { get; set; }
 
     public ICollection<Telefono> Telefonos { get; set; } = new List<Telefono>();
-    /*
-      esta tabla se creo para no guardar el tipo como texto en Telefono
-      Si se guardaba como string podian haber errores como:
-      trabajo, Trabajo, trabjo
-     
-      asi se evita repetir datos y se mantiene mas ordenado
-      Averiguar si se puede poner en un enum
-     */
+  //
 }

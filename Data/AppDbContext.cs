@@ -18,7 +18,7 @@ public DbSet<Beneficio> Beneficios { get; set; }
     {
         base.OnModelCreating(modelBuilder);
 
-        // Definimos las llaves primarias manualmente para ir sobre seguro
+       
         modelBuilder.Entity<Cliente>().HasKey(x => x.IdCliente);
         modelBuilder.Entity<Plan>().HasKey(x => x.IdPlan);
         modelBuilder.Entity<ClientePlan>().HasKey(x => x.IdClientePlan);
@@ -49,7 +49,7 @@ modelBuilder.Entity<Beneficio>()
     .HasOne(b => b.Plan)
     .WithMany(p => p.Beneficios)
     .HasForeignKey(b => b.IdPlan);
-        // Configuración para el precio
+    
         modelBuilder.Entity<Plan>().Property(x => x.Precio).HasColumnType("decimal(18,2)");
     }
 }

@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using GimnasioApi.Data;
@@ -8,60 +7,75 @@ using GimnasioApi.DTO.Plan.AsignarPlan;
 using GimnasioApi.DTO.Cliente.ListarClientes;
 using GimnasioApi.DTO.Cliente.ObtenerCliente;
 using GimnasioApi.DTO.Cliente.ActualizarCliente;
+using GimnasioApi.DTO.Cliente.AgregarTelefono;
 
-namespace GimnasioApi.Controllers
+namespace GimnasioApi.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class ClientesController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class ClientesController : ControllerBase
+    private readonly AppDbContext _context;
+
+    public ClientesController(AppDbContext context)
     {
-        private readonly AppDbContext _context;
+        _context = context;
+    }
 
-        public ClientesController(AppDbContext context)
-        {
-            _context = context;
-        }
-       
-
-        //  LISTA DE CLIENTES 
-       [HttpGet]
-       public async Task<ActionResult<IEnumerable<ListarClientesOutput>>> GetClientes()
-  {
-    var clientes = await _context.Clientes
-        .Select(c => new ListarClientesOutput
-        {
-            IdCliente = c.IdCliente,
-            Nombre = c.Nombre,
-            CI = c.CI
-        })
-        .ToListAsync();
-
-    return Ok(clientes);
-  }
-
-        //  BUSQUEDA POR ID
-       [HttpGet("{id}")]
-public async Task<ActionResult<ObtenerClienteOutput>> GetCliente(int id)
-{
-    var cliente = await _context.Clientes.FindAsync(id);
-
-    if (cliente == null)
-        return NotFound();
-
-    var salida = new ObtenerClienteOutput
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<ListarClientesOutput>>> GetClientes()
     {
-        IdCliente = cliente.IdCliente,
-        Nombre = cliente.Nombre,
-        CI = cliente.CI
-    };
+        var clientes = await _context.Clientes
+            .Select(c => new ListarClientesOutput
+            {
+                IdCliente = c.IdCliente,
+                Nombre = c.Nombre,
+                CI = c.CI,
+                Activo = c.Activo
+            })
+            .ToListAsync();
+        return Ok(clientes);
+    }
 
-    return Ok(salida);
-}
+    [HttpGet("{id}")]
+    public async Task<ActionResult<ObtenerClienteOutput>> GetCliente(int id)
+    {
+        
+        var cliente = await _context.Clientes
+            .Include(c => c.Telefonos)
+            .Include(c => c.ClientesPlanes)
+                .ThenInclude(cp => cp.Plan)
+            .FirstOrDefaultAsync(c => c.IdCliente == id);
 
-          //agregar un nuevo cliente
-     [HttpPost]
+        if (cliente == null)
+            return NotFound("El cliente no existe.");
+
+        var salida = new ObtenerClienteOutput
+        {
+            IdCliente = cliente.IdCliente,
+            Nombre = cliente.Nombre,
+            CI = cliente.CI,
+            Activo = cliente.Activo,
+            Telefonos = cliente.Telefonos.Select(t => t.Numero).ToList(),
+            PlanesActivos = cliente.ClientesPlanes
+                .Where(cp => cp.Activo == true)
+                .Select(cp => cp.Plan.Nombre)
+                .ToList()
+        };
+
+        return Ok(salida);
+    }
+
+    [HttpPost]
     public async Task<ActionResult<AgregarClienteOutput>> CreateCliente([FromBody] AgregarClienteInput cliente)
-    {
+    { 
+        var existeCi = await _context.Clientes.AnyAsync(c => c.CI == cliente.CI);
+    
+        if (existeCi)
+        {
+       
+        return BadRequest("Ya existe un cliente registrado con este numero de CI.");
+         }
         var entrada = new Cliente
         {
             Nombre = cliente.Nombre,
@@ -81,85 +95,102 @@ public async Task<ActionResult<ObtenerClienteOutput>> GetCliente(int id)
         return CreatedAtAction(nameof(GetCliente), new { id = entrada.IdCliente }, salida);
     }
 
-       [HttpPost("asignar-planes")]
-       public async Task<IActionResult> AsignarPlanes([FromBody] AsignarPlanesClienteInput entrada)
+    [HttpPost("{id}/telefonos")]
+    public async Task<IActionResult> AgregarTelefono(int id, [FromBody] AgregarTelefonoInput entrada)
     {
-    //  validar si el cliente existe
-    var cliente = await _context.Clientes.FindAsync(entrada.IdCliente);
+        var cliente = await _context.Clientes.FindAsync(id);
+        if (cliente == null)
+            return NotFound($"No se encontro el cliente con ID {id}");
 
-    if (cliente == null)
-    {
-        
-        return NotFound($"No se encontro el cliente con ID {entrada.IdCliente}");
-    }
+        var tipoTelefono = await _context.TipoTelefonos.FindAsync(entrada.IdTipoTelefono);
+        if (tipoTelefono == null)
+            return BadRequest($"El ID TipoTelefonos no se encuentra.");
 
-    
-    foreach (var item in entrada.Planes)
-    {
-        var clientePlan = new ClientePlan
+        var nuevoTelefono = new Telefono
         {
-            IdCliente = entrada.IdCliente,
-            IdPlan = item.IdPlan,
-            FechaInicio = DateTime.Now, 
-            FechaFin = DateTime.Now.AddMonths(1),
-            Estado = "Activo"
+            IdCliente = id,
+            Numero = entrada.Numero,
+            IdTipoTelefono = entrada.IdTipoTelefono,
+            Cliente = cliente,
+            TipoTelefono = tipoTelefono
         };
 
-        _context.ClientesPlanes.Add(clientePlan);
+        _context.Telefonos.Add(nuevoTelefono);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { mensaje = "Telefono agregado correctamente al cliente." });
     }
 
-    await _context.SaveChangesAsync();
-
-    return Ok(new { mensaje = "Planes asignados correctamente" });
-}
-
-
-        // ACTUALIZAR CLIENTE
-       [HttpPut("{id}")]
-public async Task<ActionResult<ActualizarClienteOutput>> UpdateCliente(int id, [FromBody] ActualizarClienteInput cliente)
-{
-    var existing = await _context.Clientes.FindAsync(id);
-
-    if (existing == null)
-        return NotFound("El cliente no existe");
-
-    existing.Nombre = cliente.Nombre;
-    existing.CI = cliente.CI;
-
-    await _context.SaveChangesAsync();
-
-    var salida = new ActualizarClienteOutput
+    [HttpPost("asignar-planes")]
+    public async Task<IActionResult> AsignarPlanes([FromBody] AsignarPlanesClienteInput entrada)
     {
-        IdCliente = existing.IdCliente,
-        Nombre = existing.Nombre,
-        CI = existing.CI
-    };
+        var cliente = await _context.Clientes.FindAsync(entrada.IdCliente);
+        if (cliente == null)
+            return NotFound($"El ID del cliente no se encuentra.");
 
-    return Ok(salida);
-}
+        foreach (var item in entrada.Planes)
+        {
+            var planExiste = await _context.Planes.AnyAsync(p => p.IdPlan == item.IdPlan);
+            if (!planExiste)
+                return BadRequest($"El ID del plan no se Encuentra.");
 
-       [HttpGet("Estado")]
-public async Task<ActionResult<List<ListarClientesOutput>>> Get([FromQuery] bool? activo)
-{
-    // Creamos la consulta base
-    var query = _context.Clientes.AsQueryable();
+            var clientePlan = new ClientePlan
+            {
+                IdCliente = entrada.IdCliente,
+                IdPlan = item.IdPlan,
+                Activo = true
+            };
+            _context.ClientesPlanes.Add(clientePlan);
+        }
 
-    // Si el usuario envía el parámetro ?activo=true o ?activo=false, filtramos
-    if (activo.HasValue)
-    {
-        query = query.Where(x => x.Activo == activo.Value);
+        await _context.SaveChangesAsync();
+        return Ok(new { mensaje = "Planes asignados correctamente" });
     }
 
-    var clientes = await query
+    [HttpPut("{id}")]
+    public async Task<ActionResult<ActualizarClienteOutput>> UpdateCliente(int id, [FromBody] ActualizarClienteInput cliente)
+    {
+        var existing = await _context.Clientes.FindAsync(id);
+        if (existing == null)
+        {
+            return NotFound("El cliente no existe");
+        }
+        var existeCiEnOtro = await _context.Clientes.AnyAsync(c => c.CI == cliente.CI && c.IdCliente != id);
+        if (existeCiEnOtro)
+        {
+        return BadRequest("El CI ingresado ya le pertenece a otro cliente.");
+        }
+
+        existing.Nombre = cliente.Nombre;
+        existing.CI = cliente.CI;
+        existing.Activo = cliente.Activo;
+        await _context.SaveChangesAsync();
+
+        var salida = new ActualizarClienteOutput
+        {
+            IdCliente = existing.IdCliente,
+            Nombre = existing.Nombre,
+            CI = existing.CI
+        };
+
+        return Ok(salida);
+    }
+    
+   [HttpGet("PorEstado")]
+   public async Task<ActionResult<IEnumerable<ListarClientesOutput>>> GetClientesPorEstado([FromQuery] bool estadoActivo)
+   {
+    
+        var clientes = await _context.Clientes
+        .Where(c => c.Activo == estadoActivo) 
         .Select(c => new ListarClientesOutput
         {
             IdCliente = c.IdCliente,
             Nombre = c.Nombre,
             CI = c.CI,
-            Activo = c.Activo   
-        }).ToListAsync();
+            Activo = c.Activo
+        })
+        .ToListAsync();
 
-    return clientes;
-}
-    }
+       return Ok(clientes);
+   }
 }

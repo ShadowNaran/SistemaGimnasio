@@ -14,7 +14,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="DTO\Cliente\AgregarTelefono\" />
+    <Folder Include="DTO\Plan\ActualizarPlan\" />
     <Folder Include="DTO\Plan\AgregarPlan\" />
+    <Folder Include="DTO\Plan\ObtenerPlan\" />
+    <Folder Include="DTO\TipoTelefono\" />
+    <Folder Include="DTO\TipoTelefono\AgregarTipo\" />
   </ItemGroup>
 
 </Project>

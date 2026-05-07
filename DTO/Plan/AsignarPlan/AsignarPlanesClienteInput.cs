@@ -10,7 +10,7 @@ public class AsignarPlanesClienteInput
     public List<PlanEntrada> Planes { get; set; } = new();
 }
 
-// equivalente a ProductosDeEntrada
+
 public class PlanEntrada
 {
     public int IdPlan { get; set; }

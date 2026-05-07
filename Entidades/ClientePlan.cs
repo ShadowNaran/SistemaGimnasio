@@ -9,12 +9,9 @@ public class ClientePlan
 
     public DateTime FechaInicio { get; set; }
     public DateTime FechaFin { get; set; }
-    public required string Estado { get; set; } 
+    public bool Activo { get; set; } 
 
      public  Cliente Cliente { get; set; } = null!;
     public  Plan Plan { get; set; } = null!;
-    /*
-      se separo en otra tabla porque un plan puede tener varios beneficios
-      Si se guardaba todo en Plan se iba a llenar de columnas o datos repetidos
-     */
+    
 }
